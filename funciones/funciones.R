@@ -45,6 +45,8 @@ assert("Creacion del url de base", url.test == url.test.1)
 # recibe key, centro y distancia
 # devuelve un data.table con los datos obtenidos.
 # trying to get data form idealista
+# Ejemplo de uso.
+# inmuebles <- getDataFromIdealista(40.426195,-3.674118,400, debug= TRUE)
 getDataFromIdealista <- function(lat ,long, dist,
                                  key ="bf702313881a8fcc3c488d3e5e31bdfb",debug = FALSE){
   url.base  <- getURLBase(lat ,long, dist,key)
@@ -71,4 +73,4 @@ getDataFromIdealista <- function(lat ,long, dist,
   datos           # devolvemos los datos descargados despues de la paginacion
 }
 
-inmuebles <- getDataFromIdealista(40.426195,-3.674118,400, debug= TRUE)
+# inmuebles <- getDataFromIdealista(40.426195,-3.674118,400, debug= TRUE)
