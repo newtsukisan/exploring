@@ -10,6 +10,7 @@
 require(data.table)
 require(jsonlite)
 require(testit)
+require(httr)
 # 1. Funciones ------------------------------------------------------------
 
 # Funcion para conectarse al api de idealista
@@ -73,4 +74,39 @@ getDataFromIdealista <- function(lat ,long, dist,
   datos           # devolvemos los datos descargados despues de la paginacion
 }
 
-# inmuebles <- getDataFromIdealista(40.426195,-3.674118,400, debug= TRUE)
+
+# Para la funcion de obtener parametros de cada una de las paginas, 
+# necesitamos simular la distribución de tiempos en las llamadas con un elemento de pausa
+# y una generacion de tiempos aleatoria.
+
+# Creamos una funcion que dado un contenido obtenido de un GET nos de un parametro
+# asociado a una determinada cadena de busqueda utilizando Xpath
+# 
+# response -> es obtenido GET(url). Utiliza la biblioteca httr
+# xpath    -> para buscar el parametro "//section/div/div/p"
+getParameterFromResponse <- function (response, xpath){
+  contenido   <- content(response,as="text")                     # Si funciona, parseamos
+  html        <- htmlParse(contenido, asText = TRUE)             # html
+  param       <- xpathSApply(html,xpath,xmlValue)                # devuelve el parametro
+  Reduce(function (x,y) paste(x,y), param, "")                   # Para tener solo un elemento
+}
+
+# Nos devuelve una lista de parametros si hay mas de uno que cumple estas caracteristicas
+# para la consulta de xpath
+# El paquete de scrape permite hacer un scrape de forma parece que mas eficiente.
+
+# Para obtener cada uno de los datos de idealista, podríamos recoger las paginas on line
+# guardarlas y hacer el analisis off line
+# idealista ---> (API)  ---> Datos zona
+# idealista ---> (WEB)  ---> responses (GET(url)) ---> files .RData
+# .RData    ---> vector ---> parametros que queramos
+# La peticion a la web se hara simulando la navegacion de un personas esperando entre peticiones
+# un tiempo aleatorio
+testit <- function(x)
+{
+  p1 <- proc.time()
+  Sys.sleep(x)
+  proc.time() - p1 # The cpu usage should be negligible
+}
+testit(2)
+mean(rnorm(100,4,2))
