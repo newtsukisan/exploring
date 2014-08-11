@@ -65,7 +65,7 @@ getTelfFromURL  <- function(urlList, anonimo=FALSE){
   }
   # Ahora devolvemos los valores adecuados
   telf.list[sapply(telf.list, is.null)] <- NA                    # para que no tengamos NULL
-  list(good.url=good.url, telf = telf.list, bad.url = bad.url)
+  list(good.url=good.url, telf = telf.list, bad.url = bad.url)   # lista despues de la exploracion
 }
 
 

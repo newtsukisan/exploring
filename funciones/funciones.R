@@ -102,6 +102,10 @@ getParameterFromResponse <- function (response, xpath){
 # .RData    ---> vector ---> parametros que queramos
 # La peticion a la web se hara simulando la navegacion de un personas esperando entre peticiones
 # un tiempo aleatorio
+
+wait <- function(tmedio,sd){
+  Sys.sleep(rnorm(1,tmedio,sd))
+}
 testit <- function(x)
 {
   p1 <- proc.time()
@@ -109,4 +113,4 @@ testit <- function(x)
   proc.time() - p1 # The cpu usage should be negligible
 }
 testit(2)
-mean(rnorm(100,4,2))
+mean()
