@@ -1,19 +1,34 @@
-# Para crear test de las funciones que queramos
-# Lista de definiciones de lo que debe cumplir la funcion
-test_that("Repeated root", {
-  expect_that(1 ^ 1, equals(1))
-  expect_that(2 ^ 2, equals(4))
-}
-require(testit)
-# Forma sencilla de introducir los test de funciones
-assert("Debe funcionar bien", 1 != 1)
+# Para testear los datos de las diferentes versiones de las funciones.
+
+# source('funciones/funciones.R')
 
 
-# expect_that(2 + 2 == 4, is_true())
-# expect_that(2 == 1, is_false())
-# 
-# expect_that(1, is_a('numeric'))
-# 
-# expect_that(print('Hello World!'), prints_text('Hello World!'))
-# 
-# expect_that(log('a'), throws_error())
+# testeo basico de la creacion de uan url
+test_that("Testear la funcion de tiempos aleatorios", {
+url.test    <- "http://www.idealista.com/labs/propertyMap.htm?center=40.426195,-3.674118&distance=500&k=bf702313881a8fcc3c488d3e5e31bdfb&operation=sale&action=json"
+url.test.1  <- getURLBase(40.426195,-3.674118,500)
+expect_true( url.test == url.test.1)
+})
+
+
+test_that("Adquision de los datos desde el API de idealista", {
+  inmuebles <- getDataFromIdealista(40.426195,-3.674118,400, paginar= FALSE,debug= TRUE)
+  expect_true(is.data.table(inmuebles))
+  expect_true(nrow(inmuebles)==20)
+})
+
+
+# Testeo de generacion de tiempos aleatorios.
+test_that("Testear la funcion de tiempos aleatorios", {
+  t1 <- proc.time()
+  wait(1,0.3)
+  t2 <- proc.time() -t1
+  expect_true(t2[3]<= (1+3*0.3))
+})
+
+test_that("Testeamos la obtencion de datos por el nombre",{
+  d1 <- data.table (a = 1:5, b= 6:10)
+  d2 <- getDataFromNames (c('a'),d1) 
+  d3 <- data.table(a = 1:5)
+  expect_that(d2, equals(d3))
+})
