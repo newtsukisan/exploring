@@ -1,16 +1,15 @@
-
 # 0.0 Objetivo y definición ------------------------------------------------
 
 # Funciones para obtener y depurar los datos desde idealista.
 
 
 # 0.1 libraries -----------------------------------------------------------
-
-
 require(data.table)
 require(jsonlite)
-require(testit)
 require(httr)
+require(XML)
+require(xlsx)
+
 # 1. Funciones ------------------------------------------------------------
 
 # Funcion para conectarse al api de idealista
@@ -38,27 +37,27 @@ getURLBase  <- function(latitud,longitud, distancia, key ="bf702313881a8fcc3c488
   paste0(url1,center,distancia,key,operation)
 }# end function
 
-url.test    <- "http://www.idealista.com/labs/propertyMap.htm?center=40.426195,-3.674118&distance=500&k=bf702313881a8fcc3c488d3e5e31bdfb&operation=sale&action=json"
-url.test.1  <- getURLBase(40.426195,-3.674118,500)
-assert("Creacion del url de base", url.test == url.test.1)
 
 # Funcion para conectarse al api de idealista
 # recibe key, centro y distancia
 # devuelve un data.table con los datos obtenidos.
 # trying to get data form idealista
 # Ejemplo de uso.
-# inmuebles <- getDataFromIdealista(40.426195,-3.674118,400, debug= TRUE)
+# inmuebles <- getDataFromIdealista(40.426195,-3.674118,400, paginar= TRUE, debug= TRUE)
 getDataFromIdealista <- function(lat ,long, dist,
-                                 key ="bf702313881a8fcc3c488d3e5e31bdfb",debug = FALSE){
+                                 key ="bf702313881a8fcc3c488d3e5e31bdfb",
+                                 paginar= TRUE, debug = FALSE){
   url.base  <- getURLBase(lat ,long, dist,key)
   # Para analizarlo podemos utilizar la libreria de json
   jsondata <- fromJSON(url.base)
   # Lo primero que necesitamos es el numero de paginas.
-  if(debug) print("Comenzando peticion de datos ...")
-  numpaginas   <- jsondata[[2]]$totalPages              # paginas totales
+  if (debug) print("Comenzando peticion de datos ...")
+  numpaginas <- 1;
   pagactual    <- jsondata[[2]]$actualPage              # pagina cargada, suponemos la primera
   datos <- data.table(jsondata[[2]]$elementList)        # primera carga de datos
-  
+  if (paginar) {                                        # si queremos obtener todas las paginas
+    numpaginas   <- jsondata[[2]]$totalPages            # paginas totales
+  }
   # Bucle para realizar la paginación con los diferentes datos.
   # Tardará un rato
   while (pagactual < numpaginas){
@@ -85,10 +84,10 @@ getDataFromIdealista <- function(lat ,long, dist,
 # response -> es obtenido GET(url). Utiliza la biblioteca httr
 # xpath    -> para buscar el parametro "//section/div/div/p"
 getParameterFromResponse <- function (response, xpath){
-  contenido   <- content(response,as="text")                     # Si funciona, parseamos
-  html        <- htmlParse(contenido, asText = TRUE)             # html
-  param       <- xpathSApply(html,xpath,xmlValue)                # devuelve el parametro
-  Reduce(function (x,y) paste(x,y), param, "")                   # Para tener solo un elemento
+  # contenido   <- content(response,as="text")             # Si funciona, parseamos
+  # html        <- htmlParse(contenido, asText = TRUE)     # html
+  param <- xpathSApply(response,xpath,xmlValue)            # devuelve el parametro
+  Reduce(function (x,y) paste(x,y), param, "")             # Para tener solo un elemento
 }
 
 # Nos devuelve una lista de parametros si hay mas de uno que cumple estas caracteristicas
@@ -106,11 +105,93 @@ getParameterFromResponse <- function (response, xpath){
 wait <- function(tmedio,sd){
   Sys.sleep(rnorm(1,tmedio,sd))
 }
-testit <- function(x)
-{
-  p1 <- proc.time()
-  Sys.sleep(x)
-  proc.time() - p1 # The cpu usage should be negligible
+
+# Funcion para extraer los datos de un data.table a partir de los nombres.
+# Recibe los nombres en data frame y extrae los datos con esos nombres en otro data frame
+# namesof   -> vector of names in the data table c('code','url')
+# datatable -> datatable con los datos.
+getDataFromNames <- function(namesof, datatable){ 
+  datatable[,namesof,with =FALSE] 
 }
-testit(2)
-mean()
+
+# Una funcion de ayuda que nos devuelva la url a partir de un propertyCode
+getURL <- function (data,code){
+  data[data$propertyCode==code]$url
+}
+
+# Funcion para obtener las responses que contienen los datos de cada una de las paginas
+# recibe una lista de url y devuelve una lista de objetos responses a ser utilizados con la 
+# funcion getParameterFromResponse
+getResponsesFromUrl <- function (urlList, debug = TRUE, tiempo = 2, sd= 0.3){
+  n             <- length(urlList)                      # Size de nuestra lista de url               
+  contenidos    <- c()                                  # Para almacenar los datos
+  url.final     <- c()                                  # Para almacenar las url
+  for(i in 1:n){                                        # Bucle de iteracion
+    wait(tiempo,sd)                                     # Esperamos un tiempo entre llamadas
+    url.iter    <- urlList[[i]]                         # la url almacenada de la iter i
+    url.llamada <- paste0("http://",url.iter)           # Utilizamos nuestra ip directamente
+    response    <- GET(url.llamada)                     # Obtenemos la respuesta
+    if (response$status_code!=200){                     # HTTP request failed!!
+      if(debug) 
+        print(paste("Failure:",i,"Status:",response$status_code)) # show status error
+      next                                               # Pasamos al siguiente
+    }else {
+      contenido   <- content(response,as="text")         # Si funciona, parseamos
+      html        <- htmlParse(contenido, asText = TRUE) # html
+      contenidos  <- append (contenidos, html)        # Vector de salida
+      url.final  <- append (url.final, url.iter)         # Vector de url
+    }# end else
+    
+  }# end if
+  # Lo guardamos en una estructura que luego podamos utilizar para ser almacenada y 
+  # podamos extraer los datos que nos interesan sin problema
+  data.table(url = unlist(url.final), contenidos = contenidos)
+} #end function.
+
+
+# Automatizar todo el proceso desde una funcion. 
+# Toma los datos desde idealista y lo guarda en varios ficheros organizados en directorios por
+# la fecha.
+# como manejar fechas en R para que sean validas como nombres de ficheros
+proccessDataFromIdealista <- function (dir.base,zona,     # para guardar los ficheros
+                                       latitud, longitud, # centro de la busqueda
+                                       radio,             # radio de busqueda
+                                       xpath   = "//section/div/div/p",# Busqueda telefonos
+                                       names.tidy   = c('neighborhood','address',
+                                                        'rooms','floor','size','price',
+                                                        'telefono','url','propertyType'), # in tidy data
+                                       pag = TRUE, deb = TRUE){
+  
+  dir.name  <- paste0(dir.base,"/",zona,"/",date(),"/")   # directorio donde guardar las descargas
+  dir.create(dir.name,recursive = TRUE)                   # creamos un directorio con las fechas.
+  getfileName  <- function(name) paste0(dir.name,name)    # para crear cada uno de los nombres
+  # Nombres para los ficheros intermedios.
+  file.respuestaIdealista <- getfileName("respuestaID.RData")
+  file.contenidos         <- getfileName("contenidos.RData")
+  file.tidy               <- getfileName("tidy.RData")
+  file.xlsx               <- getfileName(paste0(zona,".xlsx"))
+  # Ahora realizamos todo el proceso.
+  print("pedimos los datos.")
+  respuestaIdel     <- getDataFromIdealista(latitud, longitud, radio, paginar = pag, debug= deb)
+  particulares      <- respuestaIdel[agency==FALSE,]              # Obtenemos los particulares
+  # Guardamos todos los datos.
+  save (respuestaIdel, file=file.respuestaIdealista)
+  # Ahora podemos sacar todas las paginas asocidas a los particulares.
+  contenidosParticulares  <- getResponsesFromUrl(particulares$url)
+  # Guardamos para no tener que cargarlos de nuevo
+  save(contenidosParticulares, file=file.contenidos)
+  # Ahora obtenemos todos los telefonos de los particulares.
+  setTelf <- function(l) getParameterFromResponse(l,xpath)
+  telefonos <- sapply(contenidosParticulares$contenidos, setTelf)
+  # Ahora hacemos un merge de los datos 
+  temporal <- data.table(url=contenidosParticulares$url,telefono=telefonos)
+  particulares.telefono <- merge(temporal,particulares, by="url")
+  # Guardamos los datos
+  # ahora podemos simplicar los datos
+  tidy.particulares <- getDataFromNames(names.tidy,particulares.telefono)
+  save(tidy.particulares, file =  file.tidy)
+  #  Ahora lo guardamos como un excel
+  write.xlsx(x = tidy.particulares, file = file.xlsx ,
+             sheetName = "particulares", row.names = FALSE)
+  getfileName("probando.RData")
+}
