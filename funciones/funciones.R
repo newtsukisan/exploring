@@ -9,7 +9,7 @@ require(jsonlite)
 require(httr)
 require(XML)
 require(xlsx)
-
+require(testit)
 # 1. Funciones ------------------------------------------------------------
 
 # Funcion para conectarse al api de idealista
@@ -126,6 +126,7 @@ getResponsesFromUrl <- function (urlList, debug = TRUE, tiempo = 2, sd= 0.3){
   n             <- length(urlList)                      # Size de nuestra lista de url               
   contenidos    <- c()                                  # Para almacenar los datos
   url.final     <- c()                                  # Para almacenar las url
+  assert("Debemos tener valores en la lista de urls", n !=0)
   for(i in 1:n){                                        # Bucle de iteracion
     wait(tiempo,sd)                                     # Esperamos un tiempo entre llamadas
     url.iter    <- urlList[[i]]                         # la url almacenada de la iter i
@@ -139,12 +140,14 @@ getResponsesFromUrl <- function (urlList, debug = TRUE, tiempo = 2, sd= 0.3){
       contenido   <- content(response,as="text")         # Si funciona, parseamos
       html        <- htmlParse(contenido, asText = TRUE) # html
       contenidos  <- append (contenidos, html)        # Vector de salida
-      url.final  <- append (url.final, url.iter)         # Vector de url
+      url.final   <- append (url.final, url.iter)         # Vector de url
     }# end else
     
-  }# end if
+  }# end bucle for
   # Lo guardamos en una estructura que luego podamos utilizar para ser almacenada y 
   # podamos extraer los datos que nos interesan sin problema
+  # if(url.final == NULL) url.final <- list(rep("Sin Datos",n))
+  assert("La lista a enviar no debe ser null",url.final != NULL)
   data.table(url = unlist(url.final), contenidos = contenidos)
 } #end function.
 
@@ -163,6 +166,7 @@ proccessDataFromIdealista <- function (dir.base,zona,     # para guardar los fic
                                        pag = TRUE, deb = TRUE){
   
   dir.name  <- paste0(dir.base,"/",zona,"/",date(),"/")   # directorio donde guardar las descargas
+  dir.name  <- setDirFormats(dir.name)                    # Cambiamos algunos caracteres para guardar
   dir.create(dir.name,recursive = TRUE)                   # creamos un directorio con las fechas.
   getfileName  <- function(name) paste0(dir.name,name)    # para crear cada uno de los nombres
   # Nombres para los ficheros intermedios.
@@ -174,6 +178,7 @@ proccessDataFromIdealista <- function (dir.base,zona,     # para guardar los fic
   print("pedimos los datos.")
   respuestaIdel     <- getDataFromIdealista(latitud, longitud, radio, paginar = pag, debug= deb)
   particulares      <- respuestaIdel[agency==FALSE,]              # Obtenemos los particulares
+  print (nrow(particulares))                                      # Veamos los particulares
   # Guardamos todos los datos.
   save (respuestaIdel, file=file.respuestaIdealista)
   # Ahora podemos sacar todas las paginas asocidas a los particulares.
@@ -194,4 +199,14 @@ proccessDataFromIdealista <- function (dir.base,zona,     # para guardar los fic
   write.xlsx(x = tidy.particulares, file = file.xlsx ,
              sheetName = "particulares", row.names = FALSE)
   getfileName("probando.RData")
+}
+
+# Funcion para generar los nombres de los ficheros con fechas de forma que luego sean legibles
+# Como al guardar los datos en las carpetas con fecha se puede hacer un poco complicado el 
+# recuperarla. Se trata de transformar los nombres un poco para que luego sea facil el poder 
+# recuperar los ficheros de cada uno de los archivos que tienen fechas.
+# entrada <- "resultados/Salamanca/Thu Aug 14 12:16:51 2014/"
+# salida <- "resultados/Salamanca/Thu-Aug-14-12-16-51-2014/"
+setDirFormats   <- function (dir.name){
+  gsub(":","-",gsub(" ","-",dir.name))
 }

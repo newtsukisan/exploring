@@ -2,9 +2,9 @@
  require(ggplot2)
  require(data.table)
  getwd()
- source("funciones/funciones.R")
+ source("../funciones/funciones.R")
 # Cargamos los datos de salamanca.
-load("resultados/Salamanca/Wed Aug 13 13-39-00 2014/respuestaID.RData")
+load("../resultados/Salamanca/Wed Aug 13 13-39-00 2014/respuestaID.RData")
 campos <- c('neighborhood','address','rooms','floor','size','price','agency','url','propertyType','showAddress')
 # Creamos un conjunto de datos tidy con los campos minimos para analizarlo.
 tidyData <- getDataFromNames(campos, respuestaIdel)

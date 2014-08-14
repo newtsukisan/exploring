@@ -25,6 +25,12 @@ test_that("Testear la funcion de tiempos aleatorios", {
   t2 <- proc.time() -t1
   expect_true(t2[3]<= (1+3*0.3))
 })
+# Test conversion de nombres para la generacion de los directorios con fechas.
+test_that("Nombres para los directorios con fechas.", {
+  entrada <- "resultados/Salamanca/Thu Aug 14 12:16:51 2014/"
+  deseado <- "resultados/Salamanca/Thu-Aug-14-12-16-51-2014/"
+  expect_that(deseado,equals(setDirFormats(entrada)))
+})
 
 test_that("Testeamos la obtencion de datos por el nombre",{
   d1 <- data.table (a = 1:5, b= 6:10)
