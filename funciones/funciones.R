@@ -80,7 +80,6 @@ getDataFromIdealista <- function(lat ,long, dist,
 
 # Creamos una funcion que dado un contenido obtenido de un GET nos de un parametro
 # asociado a una determinada cadena de busqueda utilizando Xpath
-# 
 # response -> es obtenido GET(url). Utiliza la biblioteca httr
 # xpath    -> para buscar el parametro "//section/div/div/p"
 getParameterFromResponse <- function (response, xpath){
@@ -120,7 +119,9 @@ getURL <- function (data,code){
 }
 
 # Funcion para obtener las responses que contienen los datos de cada una de las paginas
-# recibe una lista de url y devuelve una lista de objetos responses a ser utilizados con la 
+# recibe una lista de url y devuelve una data.table con las url y los
+# contenidos. En el caso de no encontrar contenidos devuelve NULL.
+# los contenidos devueltos se utilizan con la funcion getParameterFromResponse
 # funcion getParameterFromResponse
 getResponsesFromUrl <- function (urlList, debug = TRUE, tiempo = 2, sd= 0.3){
   n             <- length(urlList)                      # Size de nuestra lista de url               
@@ -150,7 +151,6 @@ getResponsesFromUrl <- function (urlList, debug = TRUE, tiempo = 2, sd= 0.3){
   # se encuentran mal, entonces devolvemos NULL
   if(length(url.final) == 0) NULL
     else data.table(url = unlist(url.final), contenidos = contenidos)
-
 } #end function.
 
 
@@ -184,8 +184,8 @@ proccessDataFromIdealista <- function (dir.base,zona,     # para guardar los fic
   save (respuestaIdel, file=file.respuestaIdealista)
   # Ahora podemos sacar todas las paginas asocidas a los particulares.
   contenidosParticulares  <- getResponsesFromUrl(particulares$url)
-  if(is.null(contenidosParticulares)){
-    
+  # Si hemos obtenido respuesta de la pagina web de algunos particulares.
+  if(!is.null(contenidosParticulares)){ # Si los particulares tienen pagina y contenidos.
     # Guardamos para no tener que cargarlos de nuevo
     save(contenidosParticulares, file=file.contenidos)
     # Ahora obtenemos todos los telefonos de los particulares.
@@ -204,8 +204,6 @@ proccessDataFromIdealista <- function (dir.base,zona,     # para guardar los fic
   } else {
     print("NO se han encontrado contenidos para ninguno de los particulares detectados.")
   }
-
-  #getfileName("probando.RData")
 }
 
 # Funcion para generar los nombres de los ficheros con fechas de forma que luego sean legibles
