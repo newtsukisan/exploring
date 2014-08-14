@@ -38,3 +38,10 @@ test_that("Testeamos la obtencion de datos por el nombre",{
   d3 <- data.table(a = 1:5)
   expect_that(d2, equals(d3))
 })
+# Test getFromUrl
+test_that("Si no tenemos url validas, debe dar NULL",{
+  lista <- c('www.idealista.com/inmueble/1111111111/',
+             'www.idealista.com/inmueble/1111111111/',
+             'www.idealista.com/inmueble/2222222222/')
+   expect_that (getResponsesFromUrl (lista), equals(NULL))        
+})

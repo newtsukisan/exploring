@@ -146,9 +146,11 @@ getResponsesFromUrl <- function (urlList, debug = TRUE, tiempo = 2, sd= 0.3){
   }# end bucle for
   # Lo guardamos en una estructura que luego podamos utilizar para ser almacenada y 
   # podamos extraer los datos que nos interesan sin problema
-  # if(url.final == NULL) url.final <- list(rep("Sin Datos",n))
-  assert("La lista a enviar no debe ser null",url.final != NULL)
-  data.table(url = unlist(url.final), contenidos = contenidos)
+  # Debemos tener datos. Si no tenemos nada almacenado, porque todas las direcciones
+  # se encuentran mal, entonces devolvemos NULL
+  if(length(url.final) == 0) NULL
+    else data.table(url = unlist(url.final), contenidos = contenidos)
+
 } #end function.
 
 
@@ -178,27 +180,32 @@ proccessDataFromIdealista <- function (dir.base,zona,     # para guardar los fic
   print("pedimos los datos.")
   respuestaIdel     <- getDataFromIdealista(latitud, longitud, radio, paginar = pag, debug= deb)
   particulares      <- respuestaIdel[agency==FALSE,]              # Obtenemos los particulares
-  print (nrow(particulares))                                      # Veamos los particulares
   # Guardamos todos los datos.
   save (respuestaIdel, file=file.respuestaIdealista)
   # Ahora podemos sacar todas las paginas asocidas a los particulares.
   contenidosParticulares  <- getResponsesFromUrl(particulares$url)
-  # Guardamos para no tener que cargarlos de nuevo
-  save(contenidosParticulares, file=file.contenidos)
-  # Ahora obtenemos todos los telefonos de los particulares.
-  setTelf <- function(l) getParameterFromResponse(l,xpath)
-  telefonos <- sapply(contenidosParticulares$contenidos, setTelf)
-  # Ahora hacemos un merge de los datos 
-  temporal <- data.table(url=contenidosParticulares$url,telefono=telefonos)
-  particulares.telefono <- merge(temporal,particulares, by="url")
-  # Guardamos los datos
-  # ahora podemos simplicar los datos
-  tidy.particulares <- getDataFromNames(names.tidy,particulares.telefono)
-  save(tidy.particulares, file =  file.tidy)
-  #  Ahora lo guardamos como un excel
-  write.xlsx(x = tidy.particulares, file = file.xlsx ,
-             sheetName = "particulares", row.names = FALSE)
-  getfileName("probando.RData")
+  if(is.null(contenidosParticulares)){
+    
+    # Guardamos para no tener que cargarlos de nuevo
+    save(contenidosParticulares, file=file.contenidos)
+    # Ahora obtenemos todos los telefonos de los particulares.
+    setTelf <- function(l) getParameterFromResponse(l,xpath)
+    telefonos <- sapply(contenidosParticulares$contenidos, setTelf)
+    # Ahora hacemos un merge de los datos 
+    temporal <- data.table(url=contenidosParticulares$url,telefono=telefonos)
+    particulares.telefono <- merge(temporal,particulares, by="url")
+    # Guardamos los datos
+    # ahora podemos simplicar los datos
+    tidy.particulares <- getDataFromNames(names.tidy,particulares.telefono)
+    save(tidy.particulares, file =  file.tidy)
+    #  Ahora lo guardamos como un excel
+    write.xlsx(x = tidy.particulares, file = file.xlsx ,
+               sheetName = "particulares", row.names = FALSE)
+  } else {
+    print("NO se han encontrado contenidos para ninguno de los particulares detectados.")
+  }
+
+  #getfileName("probando.RData")
 }
 
 # Funcion para generar los nombres de los ficheros con fechas de forma que luego sean legibles
