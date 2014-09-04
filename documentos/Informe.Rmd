@@ -1,0 +1,101 @@
+---
+title: "Analisis de la Zona de Salamanca"
+output: html_document
+---
+
+Estudio de sobre los datos extraidos de idealista de la zona de Salamanca a traves del API de idealista.
+
+```{r library, echo=FALSE}
+require(data.table);
+require(ggplot2);
+require(knitr)
+load("/Users/trabajo/Dropbox/desarrollos/Analisis/resultados/Salamanca/Thu-Aug-14-16-47-49-2014/respuestaID.RData")
+# Vemos el porcentaje de particulares y de agencias.
+nparticulares<- table(respuestaIdel$agency)[[1]]
+nagencias    <- table(respuestaIdel$agency)[[2]]
+porcentajes  <- prop.table(table(respuestaIdel$agency))
+particulares <- porcentajes [[1]];
+agencias     <- porcentajes [[2]];
+exclusivas   <- nrow(subset(respuestaIdel,agency == TRUE & showAddress == TRUE))
+noexclusivas <- nagencias - exclusivas
+total        <- nrow(respuestaIdel)
+# Tenemos que añadir el precio por metro cuadrado.
+respuestaIdel$preciometro  <- respuestaIdel$price / respuestaIdel$size
+respuestaIdel <- data.table(respuestaIdel)
+```
+
+```{r agencias, results='asis', echo=FALSE}
+data.agencias <- data.frame(Total= total,Particulares=nparticulares,
+                            Agencias=nagencias, 
+                            "Agencias Exclusiva"=exclusivas, 
+                            "Agencas sin Exclusiva"=noexclusivas)
+kable(data.agencias,format="markdown")
+```
+
+
+En el presente estudio, se han obtenido un total de **`r total`** inmuebles. De este número, **`r nparticulares`** corresponden a particulares y **`r nagencias`**. Utilizando como indicador el numero de agencias que publican la direccion completa en idealista, podemos realizar una estimación de publicaciones en exclusiva es **`r exclusivas`**. 
+
+Por lo tanto la estimación de posibles clientes potenciales en la zona, localizados a través de idealista es la suma de los particulares y no exclusivas. Este número corresponde a 
+
+**`r noexclusivas - exclusivas`**  de no exclusivas + **`r nparticulares`** de particulares directos, lo que hace un total de **`r noexclusivas - exclusivas + nparticulares`**
+
+En la siguiente tabla se muestran los valores de mediana y desviacion Tipica para los diferentes
+tipos de inmuebles.
+
+```{r por_piso, results='asis', echo=FALSE}
+medianas.1 <- respuestaIdel[,c(median(preciometro)), by =  propertyType]
+medianas.2 <- respuestaIdel[,c(sd(preciometro))    , by =  propertyType]
+setnames(medianas.1,colnames(medianas.1),c('Tipo','Mediana metro 2'))
+setnames(medianas.2,colnames(medianas.2),c('Tipo','Desviacion'))
+representa <- as.data.frame(merge(medianas.1,medianas.2,by='Tipo'))
+kable(merge(medianas.1,medianas.2,by='Tipo'), format = "markdown")
+```
+
+La siguiente grafica muestra el porcentaje de particulares frente al número de agencias en la zona.
+
+
+```{r dibujo1, echo=FALSE}
+p <- ggplot(data.frame(tipo=c('particular','agencia'),porcentaje=c(particulares,agencias)),
+            aes(x=tipo,y=porcentaje))
+p + geom_bar(colour="black", fill="#DD8888", width=.7, stat="identity") + 
+  guides(fill=FALSE) +
+  xlab("Tipo de gestión") + ylab("Porcentaje") +
+  ggtitle("Porcentaje de Particulares vs Agencias")
+```
+
+En el siguiente grafico podemos ver el numero de posibles exclusivas, posibles no exclusivas y particulares.
+
+```{r dibujo2, echo=FALSE}
+p <- ggplot(data.frame(tipo=c('exclusiva','no exclusiva','particulares'),
+                       porcentaje=c(exclusivas,noexclusivas,particulares)/total),
+            aes(x=tipo,y=porcentaje))
+p + geom_bar(colour="black", fill="#DD8888", width=.7, stat="identity") + 
+  guides(fill=FALSE) +
+  xlab("Tipo de gestión") + ylab("Porcentaje") +
+  ggtitle("Porcentaje de Particulares vs Agencias")
+```
+En el siguiente gráfico podemos ver una distribucion del precio por metro cuadrado en el total de los inmuebles de la zona.
+```{r dibujo3, echo=FALSE}
+# Histogram overlaid with kernel density curve
+ggplot(respuestaIdel, aes(x=preciometro)) + 
+  geom_histogram(aes(y=..density..),      # Histogram with density instead of count on y-axis
+                 binwidth=500,
+                 colour="black", fill="white") +
+  geom_density(alpha=.2, fill="#FF6666")       + # Overlay with transparent density plot
+  geom_vline(aes(xintercept=mean(preciometro)), # Ignore NA values for mean
+             color="red", linetype="dashed", size=1)
+```
+
+```{r dibujo4, echo=FALSE}
+# Histogram overlaid with kernel density curve
+ggplot(respuestaIdel, aes(x=preciometro)) + 
+  geom_histogram(aes(y=..density..),      # Histogram with density instead of count on y-axis
+                 binwidth=500,
+                 colour="black", fill="white") +
+  geom_density(alpha=.2, fill="#FF6666")       + # Overlay with transparent density plot
+  facet_grid(propertyType~. )
+```
+
+```{r createtable, results='asis', echo=FALSE}
+ kable(head(mtcars), format = "markdown")
+```
