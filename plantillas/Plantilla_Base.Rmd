@@ -1,0 +1,186 @@
+---
+title: "Plantilla_1_Informes"
+author: "Jose A. Luna"
+date: "6 de septiembre de 2014"
+output: html_document
+---
+```{r funciones&librerias, echo=FALSE,include=FALSE, cache=FALSE}
+source("/Users/trabajo/Dropbox/desarrollos/Analisis/funciones/funciones.R")
+require(data.table)
+require(ggplot2)
+require(knitr)
+require(plyr)
+require(ggmap)
+```
+
+```{r funciones, echo=FALSE}
+# funcion para seleccionar los elementos de cierto tipo, en cierto tipo de nivel y mostrar
+# un mapa de densidades.
+# mapa           -> mapa donde vamos a dibujar las densidades
+# datatable      -> datos que vamos a representar
+# columnaTipo    -> donde vamos a seleccionar uno de los datos para agregar
+# tipo           -> que tipo vamos a seleccionar
+# colLevel       -> columna donde se encuentra el level para seleccionar
+# level          -> nivel que vamos a seleccionar
+
+drawMaps  <- function(mapa,datatable,columnaTipo, tipo, colLevel,level){
+  # Tiene este tipo de inmueble este tipo de factor.price
+  index   <- which(datatable[,c(columnaTipo),with=F] == tipo 
+                   & datatable[,c(colLevel),with=F] == level)
+  # Ahora seleccionamos los elementos
+  pisos     <- data[index ,]          # Seleccion de los elmentos para representar
+  elementos <- nrow(pisos)            # Comprobamos que tenemos datos para la densidad
+  if(elementos >1) {                  # Condicion para dibujar
+    overlay <- stat_density2d(
+      aes(x = longitude, y = latitude, fill = ..level..,alpha = ..level..),
+      size =2, bins = 10, geom = "polygon",
+      data = pisos
+    ) 
+    
+    mapa + overlay + scale_fill_gradient(low = "yellow", high = "red") +
+      geom_point(data=pisos, aes(x=longitude, y=latitude),size=5,alpha=0.4) + 
+      theme(legend.position="none") +
+      ggtitle(paste("Densidad elementos en tipo",tipo,level))
+  }# end if element
+}  # end function elements
+
+# Para presentar los datos de los diferentes inmuebles
+printHisto <- function(tipo){
+  histograma    <- ggplot(data[data$propertyType==tipo,],aes(x=factor.price,fill=factor.price))
+  histograma + geom_histogram() +
+    ggtitle(paste("Histograma de precios en",tipo)) + 
+    ylab(paste0("Cantidad de ",tipo,"s")) +
+    xlab("Rango de precios") +
+    scale_fill_brewer(palette="Spectral") +
+    scale_x_discrete(breaks=NULL)
+}
+
+# Para presentar las tablas de datos
+printTable <- function(tipo, factor){
+  pisos.x.precio <- count(data[data$propertyType==tipo,],factor)
+  columTipo <- paste('Elementos de tipo',tipo)
+  colRango  <- paste('Rango en', factor)
+  setnames(pisos.x.precio,colnames(pisos.x.precio),c(colRango ,columTipo))
+  kable(pisos.x.precio, format = "markdown")
+}
+
+# Para crear multiples dibujos en el mismo dibujo.
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  require(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+```
+
+
+```{r setting_data, echo=FALSE,include=FALSE, cache=FALSE}
+# Setting for mapping and getting data from idealista
+longitude <- - 3.674118            # longitud
+latitude  <-  40.426195            # latitude
+radius    <-  400                  # radio de la busqueda
+zoom      <-  16                   # for google zoom obtaining the map
+# Ahora obtenemos los datos para trabajar con ellos.
+#respuestaIdel <- getDataFromIdealista(latitude,longitude,radius, paginar= TRUE, debug= TRUE)
+load("/Users/trabajo/Dropbox/desarrollos/Analisis/resultados/Salamanca/Thu-Aug-14-16-47-49-2014/respuestaID.RData")
+# Cortes para convertir en factores algunos elementos, como precios o metros.
+corte.precios      <- c(0,3000,4000,20000)
+corte.preciomedio  <- c(0,200000,350000,500000,6000000)
+corte.metros       <- c(0,45,120,200,300,1000)
+# Obtenemos los diferentes niveles para poder representarlos de la forma mas adecuada.
+levels.precios     <- c('hasta 200.000', 'entre 200.000 y 350.000','entre 350.000 y 500.000',' mas de 500.000')
+levels.preciomedio <- c('hasta 3000', 'entre 3.000 y 4.000','mas de 4.000')
+levels.metros      <- c('hasta 45 metros', 'entre 45 y 120','entre 120 y 300','mas de 300')
+
+# Ahora obtenemos los mapas con los que vamos a trabajar como base
+zona  <- get_map(location=c(lon=longitude,lat=latitude), zoom=zoom)
+mapa  <- ggmap(zona, extent = "device", legend = "topleft")
+```
+
+```{r getting_data, echo=FALSE,include=FALSE, cache=FALSE}
+
+# Vemos el porcentaje de particulares y de agencias.
+nparticulares<- table(respuestaIdel$agency)[[1]]
+nagencias    <- table(respuestaIdel$agency)[[2]]
+porcentajes  <- prop.table(table(respuestaIdel$agency))
+particulares <- porcentajes [[1]];
+agencias     <- porcentajes [[2]];
+exclusivas   <- nrow(subset(respuestaIdel,agency == TRUE & showAddress == TRUE))
+noexclusivas <- nagencias - exclusivas
+total        <- nrow(respuestaIdel)
+# Tenemos que añadir el precio por metro cuadrado.
+ respuestaIdel$preciometro  <- respuestaIdel$price / respuestaIdel$size
+# respuestaIdel <- data.table(respuestaIdel)
+# Ahora calculamos algunos factores para presentar algunos dibujos
+ data <- respuestaIdel[,c('latitude','longitude','preciometro','propertyType','price','size'),with =FALSE]
+ 
+ data$latitude  <- as.numeric(respuestaIdel$latitude)
+ data$longitude <- as.numeric(respuestaIdel$longitude)
+ # Ahora convertimos algunas de las variables continuas en variables discretas y factores
+ data$factor.preciometro  <- cut(as.numeric(data$preciometro), corte.precios )
+ data$factor.price        <- cut(as.numeric(data$price),       corte.preciomedio)
+ data$factor.size         <- cut(as.numeric(data$size),        corte.metros )
+ # valores descriptivos para los levels de los factores
+ # valores descritivos para los rangos de precios
+ levels(data$factor.price)     <- levels.precios 
+ # valores descriptivos para los rangos del precio por metro cuadrado
+ levels(data$factor.preciometro) <- corte.preciomedio
+ # valores descriptivos para la superficie.
+ levels(data$factor.size) <- corte.metros
+ 
+ # Ahora obtenemos algunos datos utiles para representar los diferentes datos.
+ tipo.inmueble    <- levels(as.factor(data$propertyType))
+ nTipo.inmueble   <- length(tipo.inmueble)
+ 
+```
+
+
+Distribución de precios en la de la zona
+```{r por.precio, results='asis', echo=FALSE}
+for (i in 1:nTipo.inmueble ){
+  printTable(tipo.inmueble[[i]],"factor.price")
+  printTable(tipo.inmueble[[i]],"factor.preciometro")
+}
+
+```
+

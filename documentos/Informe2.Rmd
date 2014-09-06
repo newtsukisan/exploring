@@ -1,0 +1,209 @@
+---
+title: "Analisis de la Zona de Salamanca"
+author: "Jose A. Luna"
+date: "5 de septiembre de 2014"
+output: html_document
+---
+
+
+Estudio de sobre los datos extraidos de idealista de la zona de Salamanca a traves del API de idealista.
+
+```{r library, echo=FALSE}
+require(data.table)
+require(ggplot2)
+require(knitr)
+require(plyr)
+require(ggmap)
+load("/Users/trabajo/Dropbox/desarrollos/Analisis/resultados/Salamanca/Thu-Aug-14-16-47-49-2014/respuestaID.RData")
+# Vemos el porcentaje de particulares y de agencias.
+nparticulares<- table(respuestaIdel$agency)[[1]]
+nagencias    <- table(respuestaIdel$agency)[[2]]
+porcentajes  <- prop.table(table(respuestaIdel$agency))
+particulares <- porcentajes [[1]];
+agencias     <- porcentajes [[2]];
+exclusivas   <- nrow(subset(respuestaIdel,agency == TRUE & showAddress == TRUE))
+noexclusivas <- nagencias - exclusivas
+total        <- nrow(respuestaIdel)
+# Tenemos que añadir el precio por metro cuadrado.
+ respuestaIdel$preciometro  <- respuestaIdel$price / respuestaIdel$size
+# respuestaIdel <- data.table(respuestaIdel)
+# # Ahora calculamos algunos factores para presentar algunos dibujos
+ data <- respuestaIdel[,c('latitude','longitude','preciometro','propertyType','price','size'),with =FALSE]
+ 
+ data$latitude  <- as.numeric(respuestaIdel$latitude)
+ data$longitude <- as.numeric(respuestaIdel$longitude)
+# Ahora convertimos algunas de las variables continuas en variables discretas y factores
+data$factor.preciometro  <- cut(as.numeric(data$preciometro), c(0,3000,4000,20000))
+data$factor.price        <- cut(as.numeric(data$price), c(0,200000,350000,500000,6000000))
+data$factor.size         <- cut(as.numeric(data$size),  c(0,45,120,200,300,1000))
+# 
+levels(data$factor.price) <- c('hasta 200.000', 'entre 200.000 y 350.000',
+                               'entre 350.000 y 500.000', ' mas de 500.000')
+
+
+```
+
+```{r funciones, echo=FALSE}
+# funcion para seleccionar los elementos de cierto tipo, en cierto tipo de nivel y mostrar
+# un mapa de densidades.
+# mapa           -> mapa donde vamos a dibujar las densidades
+# datatable      -> datos que vamos a representar
+# columnaTipo    -> donde vamos a seleccionar uno de los datos para agregar
+# tipo           -> que tipo vamos a seleccionar
+# colLevel       -> columna donde se encuentra el level para seleccionar
+# level          -> nivel que vamos a seleccionar
+
+drawMaps  <- function(mapa,datatable,columnaTipo, tipo, colLevel,level){
+  # Tiene este tipo de inmueble este tipo de factor.price
+  index   <- which(datatable[,c(columnaTipo),with=F] == tipo 
+                   & datatable[,c(colLevel),with=F] == level)
+  # Ahora seleccionamos los elementos
+  pisos     <- data[index ,]          # Seleccion de los elmentos para representar
+  elementos <- nrow(pisos)            # Comprobamos que tenemos datos para la densidad
+  if(elementos >1) {                  # Condicion para dibujar
+    overlay <- stat_density2d(
+      aes(x = longitude, y = latitude, fill = ..level..,alpha = ..level..),
+      size =2, bins = 10, geom = "polygon",
+      data = pisos
+    ) 
+    
+    mapa + overlay + scale_fill_gradient(low = "yellow", high = "red") +
+      geom_point(data=pisos, aes(x=longitude, y=latitude),size=5,alpha=0.4) + 
+      theme(legend.position="none") +
+      ggtitle(paste("Densidad elementos en tipo",tipo,level))
+  }# end if element
+}  # end function elements
+
+
+
+
+
+# Para presentar los datos de los diferentes inmuebles
+printHisto <- function(tipo){
+  histograma    <- ggplot(data[data$propertyType==tipo,],aes(x=factor.price,fill=factor.price))
+  histograma + geom_histogram() +
+    ggtitle(paste("Histograma de precios en",tipo)) + 
+    ylab(paste0("Cantidad de ",tipo,"s")) +
+    xlab("Rango de precios") +
+    scale_fill_brewer(palette="Spectral") +
+    scale_x_discrete(breaks=NULL)
+}
+# Para presentar las tablas de datos
+printTable <- function(tipo, factor){
+  pisos.x.precio <- count(data[data$propertyType==tipo,],factor)
+  setnames(pisos.x.precio,colnames(pisos.x.precio),c('Rango','Numero'))
+  kable(pisos.x.precio, format = "markdown")
+}
+
+
+# Para crear multiples dibujos en el mismo dibujo.
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  require(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+```
+
+
+Tabla con datos de agencias.
+
+```{r agencias, results='asis', echo=FALSE}
+data.agencias <- data.frame(Total= total,Particulares=nparticulares,
+                            Agencias=nagencias, 
+                            "Agencias Exclusiva"=exclusivas, 
+                            "Agencas sin Exclusiva"=noexclusivas)
+kable(data.agencias,format="markdown")
+```
+
+En la siguiente tabla se muestran los valores de mediana y desviacion Tipica para los diferentes tipos de inmuebles.
+
+```{r por_tipo, results='asis', echo=FALSE}
+medianas.1 <- respuestaIdel[,c(median(preciometro)), by =  propertyType]
+medianas.2 <- respuestaIdel[,c(sd(preciometro))    , by =  propertyType]
+medianas.3 <- respuestaIdel[,c(mean(preciometro))  , by =  propertyType]
+medianas.4 <- count(respuestaIdel, "propertyType")
+setnames(medianas.1,colnames(medianas.1),c('Tipo','Mediana metro 2'))
+setnames(medianas.2,colnames(medianas.2),c('Tipo','Desviacion'))
+setnames(medianas.3,colnames(medianas.3),c('Tipo','Media'))
+setnames(medianas.4,colnames(medianas.4),c('Tipo','Cantidad'))
+representa <- merge(medianas.3,merge(medianas.1,medianas.2,by='Tipo'),by='Tipo')
+representa <- merge(medianas.4,representa,by='Tipo')
+kable(representa, format = "markdown")
+```
+
+Distribución de precios en los pisos de la zona
+```{r por.precio, results='asis', echo=FALSE}
+printTable('piso',"factor.price")
+```
+
+La distribución de precios por tipo de inmueble se refleja en los siguientes diagramas.
+
+```{r histograma.por.precio, results='asis', echo=FALSE}
+tipos    <- levels(as.factor(data$propertyType))
+for(i in 1: length(tipos)){
+  print(printHisto(tipos[[i]]))
+}
+```
+
+A continuación se presentan algunos mapas reflejando la distribucion según precios.
+```{r mapas, results='asis', echo=FALSE}
+# Obtenemos los mapas
+salamanca      <- get_map(location=c(lon=-3.674118,lat=40.426195), zoom=16)
+mapa.salamanca <- ggmap(salamanca, extent = "device", legend = "topleft")
+# obtenemos los diferentes tipos de inmuebles
+tipos    <- levels(as.factor(data$propertyType))
+precios  <- levels(data$factor.price)
+# representamos todos los mapas
+for (i in 1:length(tipos)){
+  for (j in 1:length(precios)){
+     print(drawMaps (mapa.salamanca,data,
+                     "propertyType",tipos[[i]],
+                     "factor.price",precios[[j]]))
+  }# inner j loop
+}  # outer i loop
+
+```
+
+
+
