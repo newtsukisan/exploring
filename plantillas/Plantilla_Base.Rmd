@@ -113,7 +113,6 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 ```
 
-
 ```{r setting_data, echo=FALSE,include=FALSE, cache=FALSE}
 # Setting for mapping and getting data from idealista
 longitude <- - 3.674118            # longitud
@@ -124,13 +123,13 @@ zoom      <-  16                   # for google zoom obtaining the map
 #respuestaIdel <- getDataFromIdealista(latitude,longitude,radius, paginar= TRUE, debug= TRUE)
 load("/Users/trabajo/Dropbox/desarrollos/Analisis/resultados/Salamanca/Thu-Aug-14-16-47-49-2014/respuestaID.RData")
 # Cortes para convertir en factores algunos elementos, como precios o metros.
-corte.precios      <- c(0,3000,4000,20000)
-corte.preciomedio  <- c(0,200000,350000,500000,6000000)
+corte.precios      <- c(0,200000,350000,500000,6000000)
+corte.preciomedio  <- c(0,3000,4000,20000)
 corte.metros       <- c(0,45,120,200,300,1000)
 # Obtenemos los diferentes niveles para poder representarlos de la forma mas adecuada.
 levels.precios     <- c('hasta 200.000', 'entre 200.000 y 350.000','entre 350.000 y 500.000',' mas de 500.000')
 levels.preciomedio <- c('hasta 3000', 'entre 3.000 y 4.000','mas de 4.000')
-levels.metros      <- c('hasta 45 metros', 'entre 45 y 120','entre 120 y 300','mas de 300')
+levels.metros      <- c('hasta 45 metros', 'entre 45 y 120','entre 120 y 200','entre 200 y 300','mas de 300')
 
 # Ahora obtenemos los mapas con los que vamos a trabajar como base
 zona  <- get_map(location=c(lon=longitude,lat=latitude), zoom=zoom)
@@ -157,21 +156,44 @@ total        <- nrow(respuestaIdel)
  data$latitude  <- as.numeric(respuestaIdel$latitude)
  data$longitude <- as.numeric(respuestaIdel$longitude)
  # Ahora convertimos algunas de las variables continuas en variables discretas y factores
- data$factor.preciometro  <- cut(as.numeric(data$preciometro), corte.precios )
- data$factor.price        <- cut(as.numeric(data$price),       corte.preciomedio)
+ data$factor.preciometro  <- cut(as.numeric(data$preciometro), corte.preciomedio )
+ data$factor.price        <- cut(as.numeric(data$price),       corte.precios)
  data$factor.size         <- cut(as.numeric(data$size),        corte.metros )
  # valores descriptivos para los levels de los factores
  # valores descritivos para los rangos de precios
- levels(data$factor.price)     <- levels.precios 
+ levels(data$factor.price)       <- levels.precios 
  # valores descriptivos para los rangos del precio por metro cuadrado
- levels(data$factor.preciometro) <- corte.preciomedio
+ levels(data$factor.preciometro) <- levels.preciomedio
  # valores descriptivos para la superficie.
- levels(data$factor.size) <- corte.metros
+ levels(data$factor.size)        <- levels.metros 
  
  # Ahora obtenemos algunos datos utiles para representar los diferentes datos.
  tipo.inmueble    <- levels(as.factor(data$propertyType))
  nTipo.inmueble   <- length(tipo.inmueble)
  
+```
+
+```{r agencias, results='asis', echo=FALSE}
+data.agencias <- data.frame(Total= total,Particulares=nparticulares,
+                            Agencias=nagencias, 
+                            "Agencias Exclusiva"=exclusivas, 
+                            "Agencas sin Exclusiva"=noexclusivas)
+kable(data.agencias,format="markdown")
+```
+
+Valores de las distribucion de precios, medias, medias y dispersión
+```{r por_tipo, results='asis', echo=FALSE}
+medianas.1 <- respuestaIdel[,c(median(preciometro)), by =  propertyType]
+medianas.2 <- respuestaIdel[,c(sd(preciometro))    , by =  propertyType]
+medianas.3 <- respuestaIdel[,c(mean(preciometro))  , by =  propertyType]
+medianas.4 <- count(respuestaIdel, "propertyType")
+setnames(medianas.1,colnames(medianas.1),c('Tipo','Mediana metro 2'))
+setnames(medianas.2,colnames(medianas.2),c('Tipo','Desviacion'))
+setnames(medianas.3,colnames(medianas.3),c('Tipo','Media'))
+setnames(medianas.4,colnames(medianas.4),c('Tipo','Cantidad'))
+representa <- merge(medianas.3,merge(medianas.1,medianas.2,by='Tipo'),by='Tipo')
+representa <- merge(medianas.4,representa,by='Tipo')
+kable(representa, format = "markdown")
 ```
 
 

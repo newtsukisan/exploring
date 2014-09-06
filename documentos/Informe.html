@@ -59,7 +59,9 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <p>Estudio de sobre los datos extraidos de idealista de la zona de Salamanca a traves del API de idealista.</p>
 <pre><code>## Loading required package: data.table
 ## Loading required package: ggplot2
-## Loading required package: knitr</code></pre>
+## Loading required package: knitr
+## Loading required package: plyr
+## Loading required package: ggmap</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -88,30 +90,40 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <thead>
 <tr class="header">
 <th align="left">Tipo</th>
+<th align="right">Cantidad</th>
+<th align="right">Media</th>
 <th align="right">Mediana metro 2</th>
 <th align="right">Desviacion</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
+<td align="left">ático</td>
+<td align="right">61</td>
+<td align="right">5034</td>
+<td align="right">4846</td>
+<td align="right">1116</td>
+</tr>
+<tr class="even">
 <td align="left">dúplex</td>
+<td align="right">10</td>
+<td align="right">5435</td>
 <td align="right">4946</td>
 <td align="right">1526</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td align="left">estudio</td>
+<td align="right">27</td>
+<td align="right">3592</td>
 <td align="right">3611</td>
 <td align="right">1049</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td align="left">piso</td>
+<td align="right">676</td>
+<td align="right">3973</td>
 <td align="right">3784</td>
 <td align="right">1219</td>
-</tr>
-<tr class="even">
-<td align="left">ático</td>
-<td align="right">4846</td>
-<td align="right">1116</td>
 </tr>
 </tbody>
 </table>

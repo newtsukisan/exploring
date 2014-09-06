@@ -6,9 +6,11 @@ output: html_document
 Estudio de sobre los datos extraidos de idealista de la zona de Salamanca a traves del API de idealista.
 
 ```{r library, echo=FALSE}
-require(data.table);
-require(ggplot2);
+require(data.table)
+require(ggplot2)
 require(knitr)
+require(plyr)
+require(ggmap)
 load("/Users/trabajo/Dropbox/desarrollos/Analisis/resultados/Salamanca/Thu-Aug-14-16-47-49-2014/respuestaID.RData")
 # Vemos el porcentaje de particulares y de agencias.
 nparticulares<- table(respuestaIdel$agency)[[1]]
@@ -22,8 +24,19 @@ total        <- nrow(respuestaIdel)
 # Tenemos que añadir el precio por metro cuadrado.
 respuestaIdel$preciometro  <- respuestaIdel$price / respuestaIdel$size
 respuestaIdel <- data.table(respuestaIdel)
-```
+# Ahora calculamos algunos factores para presentar algunos dibujos
+data <- respuestaIdel[,c('latitude','longitude','preciometro','propertyType','price','size')]
+data$latitude  <- as.numeric(data$latitude)
+data$longitude <- as.numeric(data$longitude)
+# Ahora convertimos algunas de las variables continuas en variables discretas y factores
+data$factor.preciometro  <- cut(data$preciometro, c(0,3000,4000,20000))
+data$factor.price        <- cut(data$price, c(0,200000,350000,500000,6000000))
+data$factor.size         <- cut(data$size,  c(0,45,120,200,300,1000))
 
+levels(data$factor.price) <- c('hasta 200.000', 'entre 200.000 y 350.000',
+                               'entre 350.000 y 500.000', ' mas de 500.000')
+```
+Tabla con datos de agencias.
 ```{r agencias, results='asis', echo=FALSE}
 data.agencias <- data.frame(Total= total,Particulares=nparticulares,
                             Agencias=nagencias, 
@@ -31,25 +44,21 @@ data.agencias <- data.frame(Total= total,Particulares=nparticulares,
                             "Agencas sin Exclusiva"=noexclusivas)
 kable(data.agencias,format="markdown")
 ```
-
-
-En el presente estudio, se han obtenido un total de **`r total`** inmuebles. De este número, **`r nparticulares`** corresponden a particulares y **`r nagencias`**. Utilizando como indicador el numero de agencias que publican la direccion completa en idealista, podemos realizar una estimación de publicaciones en exclusiva es **`r exclusivas`**. 
-
-Por lo tanto la estimación de posibles clientes potenciales en la zona, localizados a través de idealista es la suma de los particulares y no exclusivas. Este número corresponde a 
-
-**`r noexclusivas - exclusivas`**  de no exclusivas + **`r nparticulares`** de particulares directos, lo que hace un total de **`r noexclusivas - exclusivas + nparticulares`**
-
-En la siguiente tabla se muestran los valores de mediana y desviacion Tipica para los diferentes
-tipos de inmuebles.
-
-```{r por_piso, results='asis', echo=FALSE}
+En la siguiente tabla se muestran los valores de mediana y desviacion Tipica para los diferentes tipos de inmuebles.
+```{r por_tipo, results='asis', echo=FALSE}
 medianas.1 <- respuestaIdel[,c(median(preciometro)), by =  propertyType]
 medianas.2 <- respuestaIdel[,c(sd(preciometro))    , by =  propertyType]
+medianas.3 <- respuestaIdel[,c(mean(preciometro))  , by =  propertyType]
+medianas.4 <- count(respuestaIdel, "propertyType")
 setnames(medianas.1,colnames(medianas.1),c('Tipo','Mediana metro 2'))
 setnames(medianas.2,colnames(medianas.2),c('Tipo','Desviacion'))
-representa <- as.data.frame(merge(medianas.1,medianas.2,by='Tipo'))
-kable(merge(medianas.1,medianas.2,by='Tipo'), format = "markdown")
+setnames(medianas.3,colnames(medianas.3),c('Tipo','Media'))
+setnames(medianas.4,colnames(medianas.4),c('Tipo','Cantidad'))
+representa <- merge(medianas.3,merge(medianas.1,medianas.2,by='Tipo'),by='Tipo')
+representa <- merge(medianas.4,representa,by='Tipo')
+kable(representa, format = "markdown")
 ```
+Distribución de precios en los pisos de la zona
 
 La siguiente grafica muestra el porcentaje de particulares frente al número de agencias en la zona.
 
