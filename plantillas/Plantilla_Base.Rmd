@@ -36,10 +36,10 @@ drawMaps  <- function(mapa,datatable,columnaTipo, tipo, colLevel,level){
       size =2, bins = 10, geom = "polygon",
       data = pisos
     ) 
-    
+    # Geom Point puede tambien representar el color por agency 
     mapa + overlay + scale_fill_gradient(low = "yellow", high = "red") +
-      geom_point(data=pisos, aes(x=longitude, y=latitude),size=5,alpha=0.4) + 
-      theme(legend.position="none") +
+      geom_point(data=pisos, aes(x=longitude, y=latitude, color=agency),size=5,alpha=0.4) + 
+      theme(legend.position="top") +
       ggtitle(paste("Densidad elementos en tipo",tipo,level))
   }# end if element
 }  # end function elements
@@ -151,7 +151,7 @@ total        <- nrow(respuestaIdel)
  respuestaIdel$preciometro  <- respuestaIdel$price / respuestaIdel$size
 # respuestaIdel <- data.table(respuestaIdel)
 # Ahora calculamos algunos factores para presentar algunos dibujos
- data <- respuestaIdel[,c('latitude','longitude','preciometro','propertyType','price','size'),with =FALSE]
+ data <- respuestaIdel[,c('latitude','agency','longitude','preciometro','propertyType','price','size'),with =FALSE]
  
  data$latitude  <- as.numeric(respuestaIdel$latitude)
  data$longitude <- as.numeric(respuestaIdel$longitude)
@@ -206,3 +206,35 @@ for (i in 1:nTipo.inmueble ){
 
 ```
 
+A continuación se presentan algunos mapas reflejando la distribucion según precios.
+```{r mapas, results='asis', echo=FALSE}
+# Obtenemos los mapas
+# obtenemos los diferentes tipos de inmuebles
+tipos    <- tipo.inmueble
+precios  <- levels.precios
+# representamos todos los mapas
+for (i in 1:length(tipos)){
+  for (j in 1:length(precios)){
+     print(drawMaps (mapa,data,
+                     "propertyType",tipos[[i]],
+                     "factor.price",precios[[j]]))
+  }# inner j loop
+}  # outer i loop
+
+```
+Podemos obtener tambien la distribución en base al precio medio por metro cuadrado.
+```{r mapas_metro_cuadrado, results='asis', echo=FALSE}
+# Obtenemos los mapas
+# obtenemos los diferentes tipos de inmuebles
+tipos    <- tipo.inmueble
+precios  <- levels.preciomedio
+# representamos todos los mapas
+for (i in 1:length(tipos)){
+  for (j in 1:length(precios)){
+     print(drawMaps (mapa,data,
+                     "propertyType",tipos[[i]],
+                     "factor.preciometro",precios[[j]]))
+  }# inner j loop
+}  # outer i loop
+
+```
