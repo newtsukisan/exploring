@@ -25,16 +25,25 @@ require(testit)
 # download.file (url, destfile="data/trialIdealista.json", method = "curl")
 # latitud  -> latitud  del centro del circulo de busqueda, ejemplo 40.426195
 # longitud -> longitud del centro del circulo de busqueda, ejemplo -3.674118"
-# key      -> Por defecto la generada para la la http://85.52.103.122     bf702313881a8fcc3c488d3e5e31bdfb
 # distancia-> Distancia del radio de busqueda en metros. ejemplo 500
-getURLBase  <- function(latitud,longitud, distancia, key ="bf702313881a8fcc3c488d3e5e31bdfb"){
+# key      -> Por defecto la generada para la la http://85.52.103.122 
+# operation-> sale or rent, por defecto es sale.
+# key cambia con cada ip de consulta. Para generarla es necesario ir a la web de idealista y 
+# crear un api con la direccion http://ip
+# http://87.221.8.75   Fermin caballero  -> a50c6300a116fdccbb24527e121895af
+# http://85.52.103.122 Alcala            -> bf702313881a8fcc3c488d3e5e31bdfb
+
+
+getURLBase  <- function(latitud,longitud, distancia, key ="bf702313881a8fcc3c488d3e5e31bdfb",
+                        operation='sale'){
   url1      <-   "http://www.idealista.com/labs/propertyMap.htm?"
   center    <-   paste0("center=",latitud,",",longitud)
   distancia <-   paste0("&distance=",distancia)
   key       <-   paste0("&k=",key)
-  operation <-   "&operation=sale&action=json"
-  #numpage   <-  "&numPage=139"
-  paste0(url1,center,distancia,key,operation)
+  operation <-   paste0("&operation=",operation)
+  action    <-   "&action=json"
+  #numpage  <-  "&numPage=139"
+  paste0(url1,center,distancia,key,operation,action)
 }# end function
 
 
@@ -43,11 +52,13 @@ getURLBase  <- function(latitud,longitud, distancia, key ="bf702313881a8fcc3c488
 # devuelve un data.table con los datos obtenidos.
 # trying to get data form idealista
 # Ejemplo de uso.
-# inmuebles <- getDataFromIdealista(40.426195,-3.674118,400, paginar= TRUE, debug= TRUE)
+# inmuebles <- getDataFromIdealista(40.426195,-3.674118,400, operation='sale',
+#                                   paginar= TRUE, debug= TRUE)
 getDataFromIdealista <- function(lat ,long, dist,
                                  key ="bf702313881a8fcc3c488d3e5e31bdfb",
+                                 operation='sale', 
                                  paginar= TRUE, debug = FALSE){
-  url.base  <- getURLBase(lat ,long, dist,key)
+  url.base  <- getURLBase(lat ,long, dist,key,operation)
   # Para analizarlo podemos utilizar la libreria de json
   jsondata <- fromJSON(url.base)
   # Lo primero que necesitamos es el numero de paginas.

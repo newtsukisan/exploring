@@ -1,7 +1,7 @@
 ---
-title: "Plantilla_1_Informes"
+title: "Informe on line de zona de Nueva España"
 author: "Jose A. Luna"
-date: "6 de septiembre de 2014"
+date:   "6 de septiembre de 2014"
 output: html_document
 ---
 ```{r funciones&librerias, echo=FALSE,include=FALSE, cache=FALSE}
@@ -36,9 +36,9 @@ drawMaps  <- function(mapa,datatable,columnaTipo, tipo, colLevel,level){
       size =2, bins = 10, geom = "polygon",
       data = pisos
     ) 
-    # Geom Point puede tambien representar el color por agency 
+    
     mapa + overlay + scale_fill_gradient(low = "yellow", high = "red") +
-      geom_point(data=pisos, aes(x=longitude, y=latitude, color=agency),size=5,alpha=0.5) + 
+      geom_point(data=pisos, aes(x=longitude, y=latitude),size=5,alpha=0.4) + 
       theme(legend.position="none") +
       ggtitle(paste("Densidad elementos en tipo",tipo,level))
   }# end if element
@@ -115,13 +115,14 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 ```{r setting_data, echo=FALSE,include=FALSE, cache=FALSE}
 # Setting for mapping and getting data from idealista
-longitude <- - 3.674118            # longitud
-latitude  <-  40.426195            # latitude
-radius    <-  400                  # radio de la busqueda
+# 40.462926, -3.670845,555
+longitude <-  -3.670845            # longitud
+latitude  <-  40.462926            # latitude
+radius    <-  555                  # radio de la busqueda
 zoom      <-  16                   # for google zoom obtaining the map
 # Ahora obtenemos los datos para trabajar con ellos.
-#respuestaIdel <- getDataFromIdealista(latitude,longitude,radius, paginar= TRUE, debug= TRUE)
-load("/Users/trabajo/Dropbox/desarrollos/Analisis/resultados/Salamanca/Thu-Aug-14-16-47-49-2014/respuestaID.RData")
+respuestaIdel <- getDataFromIdealista(latitude,longitude,radius, paginar= TRUE, debug= TRUE)
+#load("/Users/trabajo/Dropbox/desarrollos/Analisis/resultados/Salamanca/Thu-Aug-14-16-47-49-2014/respuestaID.RData")
 # Cortes para convertir en factores algunos elementos, como precios o metros.
 corte.precios      <- c(0,200000,350000,500000,6000000)
 corte.preciomedio  <- c(0,3000,4000,20000)
@@ -151,7 +152,7 @@ total        <- nrow(respuestaIdel)
  respuestaIdel$preciometro  <- respuestaIdel$price / respuestaIdel$size
 # respuestaIdel <- data.table(respuestaIdel)
 # Ahora calculamos algunos factores para presentar algunos dibujos
- data <- respuestaIdel[,c('latitude','agency','longitude','preciometro','propertyType','price','size'),with =FALSE]
+ data <- respuestaIdel[,c('latitude','longitude','preciometro','propertyType','price','size'),with =FALSE]
  
  data$latitude  <- as.numeric(respuestaIdel$latitude)
  data$longitude <- as.numeric(respuestaIdel$longitude)
@@ -218,22 +219,6 @@ for (i in 1:length(tipos)){
      print(drawMaps (mapa,data,
                      "propertyType",tipos[[i]],
                      "factor.price",precios[[j]]))
-  }# inner j loop
-}  # outer i loop
-
-```
-Podemos obtener tambien la distribución en base al precio medio por metro cuadrado.
-```{r mapas_metro_cuadrado, results='asis', echo=FALSE}
-# Obtenemos los mapas
-# obtenemos los diferentes tipos de inmuebles
-tipos    <- tipo.inmueble
-precios  <- levels.preciomedio
-# representamos todos los mapas
-for (i in 1:length(tipos)){
-  for (j in 1:length(precios)){
-     print(drawMaps (mapa,data,
-                     "propertyType",tipos[[i]],
-                     "factor.preciometro",precios[[j]]))
   }# inner j loop
 }  # outer i loop
 

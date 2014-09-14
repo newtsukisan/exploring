@@ -1,5 +1,5 @@
 ---
-title: "Plantilla_1_Informes"
+title: "Estudio Comparativo calle Alba,14. Alquiler."
 author: "Jose A. Luna"
 date: "6 de septiembre de 2014"
 output: html_document
@@ -115,13 +115,20 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 ```{r setting_data, echo=FALSE,include=FALSE, cache=FALSE}
 # Setting for mapping and getting data from idealista
-longitude <- - 3.674118            # longitud
-latitude  <-  40.426195            # latitude
+# http://188.76.205.16 -> key 9afc447517f3b00421b692bcb3129c4e
+# Salmanca             -> 40.426195, -3.674118, 480
+# Calle Alba 14        -> 40.460086, -3.651279, 200
+longitude <- -3.651279             # longitud
+latitude  <-  40.460086            # latitude
 radius    <-  400                  # radio de la busqueda
 zoom      <-  16                   # for google zoom obtaining the map
+clave     <-  "9afc447517f3b00421b692bcb3129c4e"   # clave para la consulta
+operation <-  'rent'
 # Ahora obtenemos los datos para trabajar con ellos.
-#respuestaIdel <- getDataFromIdealista(latitude,longitude,radius, paginar= TRUE, debug= TRUE)
-load("/Users/trabajo/Dropbox/desarrollos/Analisis/resultados/Salamanca/Thu-Aug-14-16-47-49-2014/respuestaID.RData")
+respuestaIdel <- getDataFromIdealista(latitude,longitude,radius, 
+                                      key =clave,operation =operation,
+                                      paginar= TRUE, debug= TRUE)
+#load("/Users/trabajo/Dropbox/desarrollos/Analisis/resultados/Salamanca/Thu-Aug-14-16-47-49-2014/respuestaID.RData")
 # Cortes para convertir en factores algunos elementos, como precios o metros.
 corte.precios      <- c(0,200000,350000,500000,6000000)
 corte.preciomedio  <- c(0,3000,4000,20000)
