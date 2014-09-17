@@ -2,7 +2,7 @@
 title: "Estudio Comparativo calle Alba,14. Alquiler."
 author: "Jose A. Luna"
 date: "6 de septiembre de 2014"
-output: html_document
+output: word_document
 ---
 ```{r funciones&librerias, echo=FALSE,include=FALSE, cache=FALSE}
 source("/Users/trabajo/Dropbox/desarrollos/Analisis/funciones/funciones.R")
@@ -116,28 +116,45 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 ```{r setting_data, echo=FALSE,include=FALSE, cache=FALSE}
 # Setting for mapping and getting data from idealista
 # http://188.76.205.16 -> key 9afc447517f3b00421b692bcb3129c4e
+# http://87.221.14.157 -> key f5fba2736a06f1d57bc66d625871f9b8
 # Salmanca             -> 40.426195, -3.674118, 480
 # Calle Alba 14        -> 40.460086, -3.651279, 200
 longitude <- -3.651279             # longitud
 latitude  <-  40.460086            # latitude
 radius    <-  300                  # radio de la busqueda en metros
 zoom      <-  16                   # for google zoom obtaining the map
-clave     <-  "9afc447517f3b00421b692bcb3129c4e"   # clave para la consulta
-operation <-  'rent'               # tipo de operacion
+clave     <-  "f5fba2736a06f1d57bc66d625871f9b8"   # clave para la consulta
+operation <-  'sale'               # tipo de operacion
 # Ahora obtenemos los datos para trabajar con ellos.
 respuestaIdel <- getDataFromIdealista(latitude,longitude,radius, 
                                       key =clave,operation =operation,
                                       paginar= TRUE, debug= TRUE)
 #load("/Users/trabajo/Dropbox/desarrollos/Analisis/resultados/Salamanca/Thu-Aug-14-16-47-49-2014/respuestaID.RData")
-# Cortes para convertir en factores algunos elementos, como precios o metros.
-corte.precios      <- c(0,2000,3500,4500,10000)
-corte.preciomedio  <- c(0,5,10,15,20)
-corte.metros       <- c(0,200,300,400,500,800,20000)
-# Obtenemos los diferentes niveles para poder representarlos de la forma mas adecuada.
-levels.precios     <- c('hasta 2.000', 'entre 2.000 y 3.500','entre 3.500 y 4.500',' mas de 4.500')
-levels.preciomedio <- c('hasta 5', 'entre 5 y 10','entre 10 y 15','mas de 15')
-levels.metros      <- c('hasta 200 metros', 'entre 200 y 300','entre 300 y 400','entre 400 y 500',
-                        'entre 500 y 800','mas de 800')
+# TODO seleccionar los rangos a partir del tipo de operacion que es.
+
+if (operation == 'sale'){
+    # Cortes para convertir en factores algunos elementos, como precios o metros.
+  corte.precios      <- c(0,200000,350000,500000,6000000)
+  corte.preciomedio  <- c(0,3000,4000,20000)
+  corte.metros       <- c(0,45,120,200,300,1000)
+  # Obtenemos los diferentes niveles para poder representarlos de la forma mas adecuada.
+  levels.precios     <- c('hasta 200.000', 'entre 200.000 y 350.000','entre 350.000 y 500.000',' mas   de 500.000')
+  levels.preciomedio <- c('hasta 3000', 'entre 3.000 y 4.000','mas de 4.000')
+  levels.metros      <- c('hasta 45 metros', 'entre 45 y 120','entre 120 y 200','entre 200 y 300','mas de 300')
+}else {
+  # Cortes para convertir en factores algunos elementos, como precios o metros.
+  corte.precios      <- c(0,2000,3500,4500,10000)
+  corte.preciomedio  <- c(0,5,10,15,20)
+  corte.metros       <- c(0,200,300,400,500,800,20000)
+  # Obtenemos los diferentes niveles para poder representarlos de la forma mas adecuada.
+  levels.precios     <- c('hasta 2.000', 'entre 2.000 y 3.500','entre 3.500 y 4.500',' mas de 4.500')
+  levels.preciomedio <- c('hasta 5', 'entre 5 y 10','entre 10 y 15','mas de 15')
+  levels.metros      <- c('hasta 200 metros', 'entre 200 y 300','entre 300 y 400','entre 400 y 500',
+                          'entre 500 y 800','mas de 800')
+}
+
+
+
 
 # Ahora obtenemos los mapas con los que vamos a trabajar como base
 zona  <- get_map(location=c(lon=longitude,lat=latitude), zoom=zoom)

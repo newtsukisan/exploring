@@ -11,4 +11,13 @@ source("funciones/funciones.R")
 # proccessDataFromIdealista("resultados","Salamanca2",40.422958, -3.681797,350, pag=TRUE, deb=TRUE)
 
 
-proccessDataFromIdealista("resultados","HispanoAmerica", 40.455110, -3.674150 ,370, pag=TRUE, deb=TRUE)
+# http://87.221.0.243 -> 2c7f76b7dbb9cce5234135fa97f94a19
+
+# Busqueda en hispano America
+#proccessDataFromIdealista("resultados","HispanoAmerica", 40.455110, -3.674150 ,370, pag=TRUE, deb=TRUE,
+#                         k="2c7f76b7dbb9cce5234135fa97f94a19")
+
+# Busqueda en la zona de Ariel 4.
+# 40.393537, -3.679118, radio = 189
+proccessDataFromIdealista("resultados","Ariel", 40.393537, -3.679118 ,189, pag=TRUE, deb=TRUE,
+                        k="2c7f76b7dbb9cce5234135fa97f94a19")

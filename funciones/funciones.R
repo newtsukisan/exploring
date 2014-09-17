@@ -176,7 +176,8 @@ proccessDataFromIdealista <- function (dir.base,zona,     # para guardar los fic
                                        names.tidy   = c('neighborhood','address',
                                                         'rooms','floor','size','price',
                                                         'telefono','url','propertyType'), # in tidy data
-                                       pag = TRUE, deb = TRUE){
+                                       pag = TRUE, deb = TRUE,
+                                       k="bf702313881a8fcc3c488d3e5e31bdfb"){
   
   dir.name  <- paste0(dir.base,"/",zona,"/",date(),"/")   # directorio donde guardar las descargas
   dir.name  <- setDirFormats(dir.name)                    # Cambiamos algunos caracteres para guardar
@@ -189,7 +190,7 @@ proccessDataFromIdealista <- function (dir.base,zona,     # para guardar los fic
   file.xlsx               <- getfileName(paste0(zona,".xlsx"))
   # Ahora realizamos todo el proceso.
   print("pedimos los datos.")
-  respuestaIdel     <- getDataFromIdealista(latitud, longitud, radio, paginar = pag, debug= deb)
+  respuestaIdel     <- getDataFromIdealista(latitud, longitud, radio, key=k,paginar = pag, debug= deb)
   particulares      <- respuestaIdel[agency==FALSE,]              # Obtenemos los particulares
   # Guardamos todos los datos.
   save (respuestaIdel, file=file.respuestaIdealista)
