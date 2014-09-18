@@ -5,7 +5,7 @@
 # Sacamos los particulares.
 # Vemos los particulares que no están en nuestra base de datos.
 # Estos particulares son los que pondriamos en nuevo excel para importar desde la base de datos.
-
+# Despues de conseguir los datos un par de veces, parece que da errores y no devuelve los códigos.
 
 # http://95.16.1.137  -> 33c703f985e886fcb93fbda51b9fc37e
 
@@ -14,6 +14,9 @@ source("funciones/funciones.R")
 
 
 # Configuracion -----------------------------------------------------------
+file.antiguo  <- "data/Particulares.xlsx"
+hoja.antiguo  <- "Hoja 1"
+
 
 dir.base  <- "resultados" # para guardar los ficheros
 zona      <- "Nuevos"     # para guardar los ficheros
@@ -33,15 +36,11 @@ file.tidy               <- getfileName("tidy.RData")
 file.xlsx               <- getfileName(paste0(zona,".xlsx"))
 
 
-# prueba simple de codigo
-s <- "http://www.idealista.com/1632913"
-extractCode(s)
 
 # lo que tenemos. Tenemos que tener un excel con una columna con todas las url para poder 
 # extraer los datos codigos de la propiedad
-res <- read.xlsx("data/Particulares.xlsx", sheetName="Hoja 1")
+res <- read.xlsx(file.antiguo, sheetName=hoja.antiguo )
 res <- data.table(res)
-class(res)
 res <- res[c(2:nrow(res)),]
 res$code <- extractCode(res$Tabla.1)
 
@@ -97,5 +96,3 @@ if(!is.null(contenidosParticulares)){ # Si los particulares tienen pagina y cont
   print("NO se han encontrado contenidos para ninguno de los particulares detectados.")
 }
 
-
-# 
