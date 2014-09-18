@@ -227,3 +227,13 @@ proccessDataFromIdealista <- function (dir.base,zona,     # para guardar los fic
 setDirFormats   <- function (dir.name){
   gsub(":","-",gsub(" ","-",dir.name))
 }
+
+# Funcion que recibe un url y extrae el codigo del final.
+# Con esta funcion tratamos de obtener el codigo del inmueble para poder 
+# saber si tenemos nuevas propiedades que no está incluidas en la base de datos.
+# http://www.idealista.com/1632913" -> 1632913
+extractCode <- function (url){
+  m     <- regexpr("/([0-9]+)", url)
+  lista <- regmatches(url, m)
+  gsub("/","",lista) 
+}

@@ -3,7 +3,7 @@
 # source('funciones/funciones.R')
 
 
-# testeo basico de la creacion de uan url
+# testeo basico de la creacion de una url
 test_that("Testear la funcion de tiempos aleatorios", {
 url.test    <- "http://www.idealista.com/labs/propertyMap.htm?center=40.426195,-3.674118&distance=500&k=bf702313881a8fcc3c488d3e5e31bdfb&operation=sale&action=json"
 url.test.1  <- getURLBase(40.426195,-3.674118,500)
@@ -11,11 +11,11 @@ expect_true( url.test == url.test.1)
 })
 
 
-test_that("Adquision de los datos desde el API de idealista", {
-  inmuebles <- getDataFromIdealista(40.426195,-3.674118,400, paginar= FALSE,debug= TRUE)
-  expect_true(is.data.table(inmuebles))
-  expect_true(nrow(inmuebles)==20)
-})
+# test_that("Adquision de los datos desde el API de idealista", {
+#   inmuebles <- getDataFromIdealista(40.426195,-3.674118,400, paginar= FALSE,debug= TRUE)
+#   expect_true(is.data.table(inmuebles))
+#   expect_true(nrow(inmuebles)==20)
+# })
 
 
 # Testeo de generacion de tiempos aleatorios.
@@ -39,9 +39,14 @@ test_that("Testeamos la obtencion de datos por el nombre",{
   expect_that(d2, equals(d3))
 })
 # Test getFromUrl
-test_that("Si no tenemos url validas, debe dar NULL",{
-  lista <- c('www.idealista.com/inmueble/1111111111/',
-             'www.idealista.com/inmueble/1111111111/',
-             'www.idealista.com/inmueble/2222222222/')
-   expect_that (getResponsesFromUrl (lista), equals(NULL))        
+# test_that("Si no tenemos url validas, debe dar NULL",{
+#   lista <- c('www.idealista.com/inmueble/1111111111/',
+#              'www.idealista.com/inmueble/1111111111/',
+#              'www.idealista.com/inmueble/2222222222/')
+#    expect_that (getResponsesFromUrl (lista), equals(NULL))        
+# })
+# Testar la función que obtiene los codigos.
+test_that("Obtencion de codigo desde url, extractCode",{ 
+ url <- "http://www.idealista.com/1632913"
+ expect_that (extractCode (url), equals("1632913"))        
 })
