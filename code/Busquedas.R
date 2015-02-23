@@ -3,13 +3,13 @@
 source("funciones/funciones.R")
 # Busqueda en nueva España
 # proccessDataFromIdealista("resultados","nuevaEsp",40.462926, -3.670845,555,pag=TRUE,deb=TRUE)
-
+# 15-12-2014 cambio los datos del centro de la zona de Salamaca
 # Busqueda en Salamanca 1
 #proccessDataFromIdealista("resultados","Salamanca",40.426195, -3.674118, 480, pag=TRUE, deb=TRUE)
 
 # Busquedas en Salmanca 2
 # proccessDataFromIdealista("resultados","Salamanca2",40.422958, -3.681797,350, pag=TRUE, deb=TRUE)
-
+# 40.426195, -3.674118, 485
 
 # http://87.221.0.243 -> 2c7f76b7dbb9cce5234135fa97f94a19
 
@@ -19,5 +19,7 @@ source("funciones/funciones.R")
 
 # Busqueda en la zona de Ariel 4.
 # 40.393537, -3.679118, radio = 189
-proccessDataFromIdealista("resultados","Ariel", 40.393537, -3.679118 ,189, pag=TRUE, deb=TRUE,
-                        k="2c7f76b7dbb9cce5234135fa97f94a19")
+#proccessDataFromIdealista("resultados","Salamanca",    # Para guardar los datos.
+#                      40.426195, -3.674118, 485,   # centro y radio de la zona 
+#                          pag=TRUE, deb=TRUE,          # paginado para extraer los datos.
+#                         k="bf702313881a8fcc3c488d3e5e31bdfb") # clave para la conexion
