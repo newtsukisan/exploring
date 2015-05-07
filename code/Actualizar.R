@@ -1,3 +1,9 @@
+# Procedimiento:
+#   1. Abro Bento y copio los valores de la web
+#   2. Copio esta columna en el excel de Particulares.xls
+#   3. Ejecuto con los valores apropiados el script.
+#   4. Los resultados resultado/nuevos/fecha
+
 # Es necesario realizar una actualizacion de los datos de forma periodica
 # Base datos [lo que utilizamos, centro donde se encuentran almacenadas]
 # la base de datos genera un excel donde estan los que estan. 
@@ -7,16 +13,17 @@
 # Estos particulares son los que pondriamos en nuevo excel para importar desde la base de datos.
 # Despues de conseguir los datos un par de veces, parece que da errores y no devuelve los códigos.
 
-# http://95.16.1.137  -> 33c703f985e886fcb93fbda51b9fc37e
-
+# http://95.16.1.137    -> 33c703f985e886fcb93fbda51b9fc37e
+# http://82.158.176.205 -> 0507bf75d3e75390e3946abee5b56121
+# http://85.52.103.122  -> bf702313881a8fcc3c488d3e5e31bdfb
 # Loading functions -------------------------------------------------------
 source("funciones/funciones.R")
 
 
 # Configuracion -----------------------------------------------------------
-file.antiguo  <- "data/Particulares.xlsx"
+file.antiguo  <- "data/Particulares.xls"
 hoja.antiguo  <- "Hoja 1"
-
+k             <- "0507bf75d3e75390e3946abee5b56121"
 
 dir.base  <- "resultados" # para guardar los ficheros
 zona      <- "Nuevos"     # para guardar los ficheros
@@ -35,8 +42,6 @@ file.xlsx               <- getfileName(paste0(zona,".xlsx"))
 file.tidy               <- getfileName("tidy.RData")
 file.xlsx               <- getfileName(paste0(zona,".xlsx"))
 
-
-
 # lo que tenemos. Tenemos que tener un excel con una columna con todas las url para poder 
 # extraer los datos codigos de la propiedad
 res <- read.xlsx(file.antiguo, sheetName=hoja.antiguo )
@@ -45,19 +50,22 @@ res <- res[c(2:nrow(res)),]
 res$code <- extractCode(res$Tabla.1)
 
 # Encontramos los datos ahora 
-# Zona de Salamanca 40.426195, -3.674118, 480
+# Zona de Salamanca           40.426195, -3.674118, 480
+# Zona de hispano america     40.456119, -3.669119, 445
+# Zona de Arganzuela          40.393056, -3.679830, 208
 # Operations --------------------------------------------------------------
 # Para las diferentes zonas, cargamos los datos desde idealista.
-Salamanca <- getDataFromIdealista(40.426195, -3.674118, 480, 
-                                  key ="33c703f985e886fcb93fbda51b9fc37e",
+# Mi zona de Salamanca
+Salamanca <- getDataFromIdealista(40.426195, -3.674118, 485, 
+                                  key =k,
                                   operation='sale', pag=TRUE, deb=TRUE)
-
-Ariel     <- getDataFromIdealista(40.393537, -3.679118 ,189, 
-                                  key ="33c703f985e886fcb93fbda51b9fc37e",
+# Zona de la milla de oro
+Ariel     <- getDataFromIdealista(40.393056, -3.679830, 208, 
+                                  key =k,
                                   operation='sale', pag=TRUE, deb=TRUE)
-
-Hispano   <- getDataFromIdealista(40.455110, -3.674150 ,370, 
-                                  key ="33c703f985e886fcb93fbda51b9fc37e",
+# Hispano america queda pendiente todo lo que es nueva españa que lleva Ana Maria
+Hispano   <- getDataFromIdealista(40.455986, -3.669036, 445, 
+                                  key =k,
                                   operation='sale', pag=TRUE, deb=TRUE)
 
   

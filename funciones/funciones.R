@@ -33,17 +33,21 @@ require(testit)
 # http://87.221.8.75   Fermin caballero  -> a50c6300a116fdccbb24527e121895af
 # http://85.52.103.122 Alcala            -> bf702313881a8fcc3c488d3e5e31bdfb
 
-
-getURLBase  <- function(latitud,longitud, distancia, key ="DpPOC772Ka5f9VAM4gvxKzSkT0Tq9bij",
-                        operation='V',aditional=""){
+# ----------------------------------------------------------------------------------------------------
+claveActual             <- "DpPOC772Ka5f9VAM4gvxKzSkT0Tq9bij"
+MaxItems                <- "1000"
+# ----------------------------------------------------------------------------------------------------
+getURLBase  <- function(latitud,longitud, distancia, key =claveActual,
+                        operation='V',aditional="",maxItems=MaxItems){
   url1      <-   "http://idealista-prod.apigee.net/public/2/search?"
   center    <-   paste0("center=",latitud,",",longitud)
   distancia <-   paste0("&distance=",distancia)
   key       <-   paste0("&apikey=",key)
   operation <-   paste0("&operation=",operation)
   action    <-   "&action=json"
+  items     <-   paste0("&maxItems=",maxItems)
   #numpage  <-  "&numPage=139"
-  paste0(url1,center,distancia,key,operation,action,aditional)
+  paste0(url1,center,distancia,key,operation,action,aditional,items)
 }# end function
 
 
@@ -55,10 +59,10 @@ getURLBase  <- function(latitud,longitud, distancia, key ="DpPOC772Ka5f9VAM4gvxK
 # inmuebles <- getDataFromIdealista(40.426195,-3.674118,400, operation='sale',
 #                                   paginar= TRUE, debug= TRUE)
 getDataFromIdealista <- function(lat ,long, dist,
-                                 key ="bf702313881a8fcc3c488d3e5e31bdfb",
+                                 key =claveActual,
                                  operation='V', 
-                                 paginar= TRUE, debug = FALSE,aditional=""){
-  url.base  <- getURLBase(lat ,long, dist,key,operation,aditional)
+                                 paginar= TRUE, debug = FALSE,aditional="",maxItems=MaxItems){
+  url.base  <- getURLBase(lat ,long, dist,key,operation,aditional,maxItems)
   # Para analizarlo podemos utilizar la libreria de json
   jsondata <- fromJSON(url.base)
   # Lo primero que necesitamos es el numero de paginas.
@@ -66,7 +70,7 @@ getDataFromIdealista <- function(lat ,long, dist,
   numpaginas <- 1;
   pagactual    <- jsondata$actualPage              # pagina cargada, suponemos la primera
   datos <- data.table(jsondata$elementList)        # primera carga de datos
-  if (paginar) {                                        # si queremos obtener todas las paginas
+  if (paginar) {                                   # si queremos obtener todas las paginas
     numpaginas   <- jsondata$totalPages            # paginas totales
   }
   # Bucle para realizar la paginación con los diferentes datos.
@@ -179,7 +183,9 @@ proccessDataFromIdealista <- function (dir.base,zona,     # para guardar los fic
                                                         'rooms','floor','size','price',
                                                         'telefono','url','propertyType'), # in tidy data
                                        pag = TRUE, deb = TRUE,
-                                       k="bf702313881a8fcc3c488d3e5e31bdfb"){
+                                       adit="",
+                                       k = claveActual,
+                                       maxIt=MaxItems){
   
   dir.name  <- paste0(dir.base,"/",zona,"/",date(),"/")   # directorio donde guardar las descargas
   dir.name  <- setDirFormats(dir.name)                    # Cambiamos algunos caracteres para guardar
@@ -192,8 +198,9 @@ proccessDataFromIdealista <- function (dir.base,zona,     # para guardar los fic
   file.xlsx               <- getfileName(paste0(zona,".xlsx"))
   # Ahora realizamos todo el proceso.
   print("pedimos los datos.")
-  respuestaIdel     <- getDataFromIdealista(latitud, longitud, radio, key=k,paginar = pag, debug= deb)
-  particulares      <- respuestaIdel[agency==FALSE,]              # Obtenemos los particulares
+  respuestaIdel     <- getDataFromIdealista(latitud, longitud, radio, key=k,paginar = pag, debug= deb,
+                                            aditional=adit,maxItems=maxIt)
+  particulares      <- respuestaIdel[showAddress==TRUE,]              # Obtenemos los particulares
   # Guardamos todos los datos.
   save (respuestaIdel, file=file.respuestaIdealista)
   # Ahora podemos sacar todas las paginas asocidas a los particulares.
@@ -239,3 +246,4 @@ extractCode <- function (url){
   lista <- regmatches(url, m)
   gsub("/","",lista) 
 }
+

@@ -5,9 +5,13 @@
 # Para ello abrimos los datos guardados en formato R y convertimos los datos numericos 
 # en la forma adecuada
 
+# Tenemos que modificar los siguientes elementos:
+# 0 - file.xlsx es donde vamos a guardar el excel con los datos para Tableau
+# 2 - Origen de los datos, en formato R. Se trata de todos los datos obtenidos de idealista.
+
 
 # 0. Constanst and name used ----------------------------------------------
-file.xlsx <- "database/Salamanca15-12-2014.xls"
+file.xlsx <- "database/Salamanca06-03-2015.xls"
 
 
 # 1. Loading functions -------------------------------------------------------
@@ -18,7 +22,7 @@ source("funciones/funciones.R")
 
 # 2.Loading data from file --------------------------------------------------
 # Cargamos una versión de la respuesta que obtuvimos de idealista
-load("resultados/Salamanca/Mon-Dec-15-18-15-34-2014/respuestaID.RData")
+load("resultados/Salamanca/Mon-Feb-23-20-06-54-2015/respuestaID.RData")
 
 
 # 3. Convertimos los datos  --------------------------------------------------
