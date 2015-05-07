@@ -71,7 +71,9 @@ getDataFromIdealista <- function(lat ,long, dist,
   }
   # Bucle para realizar la paginación con los diferentes datos.
   # Tardará un rato
+  # Necesitamos incluir un retardo al pedir cada una de las paginas
   while (pagactual < numpaginas){
+    Sys.sleep(2)
     pag            <- paste0("&numPage=",pagactual+1)           # obtenemos la pagina siguiente.
     if(debug) print(paste0("Obteniendo datos de la pagina ",pag," de ",numpaginas))
     url.paginada   <- paste0(url.base,pag)                      # creamos la peticion.
