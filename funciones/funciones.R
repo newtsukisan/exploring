@@ -34,12 +34,12 @@ require(testit)
 # http://85.52.103.122 Alcala            -> bf702313881a8fcc3c488d3e5e31bdfb
 
 
-getURLBase  <- function(latitud,longitud, distancia, key ="bf702313881a8fcc3c488d3e5e31bdfb",
-                        operation='sale',aditional=""){
+getURLBase  <- function(latitud,longitud, distancia, key ="DpPOC772Ka5f9VAM4gvxKzSkT0Tq9bij",
+                        operation='V',aditional=""){
   url1      <-   "http://idealista-prod.apigee.net/public/2/search?"
   center    <-   paste0("center=",latitud,",",longitud)
   distancia <-   paste0("&distance=",distancia)
-  key       <-   paste0("&k=",key)
+  key       <-   paste0("&apikey=",key)
   operation <-   paste0("&operation=",operation)
   action    <-   "&action=json"
   #numpage  <-  "&numPage=139"
@@ -56,7 +56,7 @@ getURLBase  <- function(latitud,longitud, distancia, key ="bf702313881a8fcc3c488
 #                                   paginar= TRUE, debug= TRUE)
 getDataFromIdealista <- function(lat ,long, dist,
                                  key ="bf702313881a8fcc3c488d3e5e31bdfb",
-                                 operation='sale', 
+                                 operation='V', 
                                  paginar= TRUE, debug = FALSE,aditional=""){
   url.base  <- getURLBase(lat ,long, dist,key,operation,aditional)
   # Para analizarlo podemos utilizar la libreria de json
@@ -64,10 +64,10 @@ getDataFromIdealista <- function(lat ,long, dist,
   # Lo primero que necesitamos es el numero de paginas.
   if (debug) print("Comenzando peticion de datos ...")
   numpaginas <- 1;
-  pagactual    <- jsondata[[2]]$actualPage              # pagina cargada, suponemos la primera
-  datos <- data.table(jsondata[[2]]$elementList)        # primera carga de datos
+  pagactual    <- jsondata$actualPage              # pagina cargada, suponemos la primera
+  datos <- data.table(jsondata$elementList)        # primera carga de datos
   if (paginar) {                                        # si queremos obtener todas las paginas
-    numpaginas   <- jsondata[[2]]$totalPages            # paginas totales
+    numpaginas   <- jsondata$totalPages            # paginas totales
   }
   # Bucle para realizar la paginación con los diferentes datos.
   # Tardará un rato
@@ -76,8 +76,8 @@ getDataFromIdealista <- function(lat ,long, dist,
     if(debug) print(paste0("Obteniendo datos de la pagina ",pag," de ",numpaginas))
     url.paginada   <- paste0(url.base,pag)                      # creamos la peticion.
     jsondata <- fromJSON(url.paginada)                          # obtenemos de nuevo los datos.
-    datos <- rbind(datos,data.table(jsondata[[2]]$elementList)) # unimos los datos nuevos
-    pagactual    <- jsondata[[2]]$actualPage                    # obtenemos la pagina actual
+    datos <- rbind(datos,data.table(jsondata$elementList)) # unimos los datos nuevos
+    pagactual    <- jsondata$actualPage                    # obtenemos la pagina actual
     
   }
   if(debug) print("Terminando peticion de datos.....")

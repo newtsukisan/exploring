@@ -19,8 +19,10 @@ source("funciones/funciones.R")
 
 # Busqueda en hispano America
 # coordenadas de la calle cuarta   40.455986, -3.669036 462
-proccessDataFromIdealista("resultados","HispanoAmerica", 40.455986, -3.669036 ,462, pag=TRUE, deb=TRUE,
-                          k="0507bf75d3e75390e3946abee5b56121")
+proccessDataFromIdealista("resultados","HispanoAmerica", 
+                          40.455986, -3.669036 ,462, 
+                          pag=TRUE, deb=TRUE,
+                          k="DpPOC772Ka5f9VAM4gvxKzSkT0Tq9bij")
 
 
 
