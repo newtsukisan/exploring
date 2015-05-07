@@ -1,8 +1,8 @@
 ---
-title: "Informe on line de zona de Salamanca"
+title: "Informe de zona para piso en calle Nicaragua 19"
 author: "Jose A. Luna"
 date: "6 de septiembre de 2014"
-output: html_document
+output: word_document
 ---
 ```{r funciones&librerias, echo=FALSE,include=FALSE, cache=FALSE}
 source("/Users/trabajo/Dropbox/desarrollos/Analisis/funciones/funciones.R")

@@ -35,15 +35,15 @@ require(testit)
 
 
 getURLBase  <- function(latitud,longitud, distancia, key ="bf702313881a8fcc3c488d3e5e31bdfb",
-                        operation='sale'){
-  url1      <-   "http://www.idealista.com/labs/propertyMap.htm?"
+                        operation='sale',aditional=""){
+  url1      <-   "http://idealista-prod.apigee.net/public/2/search?"
   center    <-   paste0("center=",latitud,",",longitud)
   distancia <-   paste0("&distance=",distancia)
   key       <-   paste0("&k=",key)
   operation <-   paste0("&operation=",operation)
   action    <-   "&action=json"
   #numpage  <-  "&numPage=139"
-  paste0(url1,center,distancia,key,operation,action)
+  paste0(url1,center,distancia,key,operation,action,aditional)
 }# end function
 
 
@@ -57,8 +57,8 @@ getURLBase  <- function(latitud,longitud, distancia, key ="bf702313881a8fcc3c488
 getDataFromIdealista <- function(lat ,long, dist,
                                  key ="bf702313881a8fcc3c488d3e5e31bdfb",
                                  operation='sale', 
-                                 paginar= TRUE, debug = FALSE){
-  url.base  <- getURLBase(lat ,long, dist,key,operation)
+                                 paginar= TRUE, debug = FALSE,aditional=""){
+  url.base  <- getURLBase(lat ,long, dist,key,operation,aditional)
   # Para analizarlo podemos utilizar la libreria de json
   jsondata <- fromJSON(url.base)
   # Lo primero que necesitamos es el numero de paginas.
