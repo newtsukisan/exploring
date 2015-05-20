@@ -38,7 +38,7 @@ claveActual             <- "DpPOC772Ka5f9VAM4gvxKzSkT0Tq9bij"
 MaxItems                <- "1000"
 # ----------------------------------------------------------------------------------------------------
 getURLBase  <- function(latitud,longitud, distancia, key =claveActual,
-                        operation='V',aditional="",maxItems=MaxItems){
+                        operation='V',aditional="",maxItems= MaxItems){
   url1      <-   "http://idealista-prod.apigee.net/public/2/search?"
   center    <-   paste0("center=",latitud,",",longitud)
   distancia <-   paste0("&distance=",distancia)
